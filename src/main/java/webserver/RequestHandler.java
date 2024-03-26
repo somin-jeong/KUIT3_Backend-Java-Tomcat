@@ -37,24 +37,34 @@ public class RequestHandler implements Runnable{
             String url = startLines[1];
 
             int requestContentLength = 0;
+            boolean logined = false;
 
             while (true) {
                 final String line = br.readLine();
                 if (line.equals("")) {
                     break;
                 }
+
                 // header info
                 if (line.startsWith("Content-Length")) {
                     requestContentLength = Integer.parseInt(line.split(": ")[1]);
+                }
+
+                if (line.startsWith("Cookie")) {
+                    if (line.split(": ")[1].equals("logined=true")) {
+                        logined = true;
+                    }
                 }
             }
 
             byte[] body = new byte[0];
 
+            // 요구사항 1.1 - index.html 반환하기
             if (url.equals("/") || url.equals("/index.html")) {
                 body = Files.readAllBytes(Paths.get("./webapp" + "/index.html"));
             }
 
+            // 요구사항 1.2 - GET 방식으로 회원가입하기
             if (url.equals("/user/form.html")) {
                 body = Files.readAllBytes(Paths.get("./webapp" + url));
             }
@@ -68,6 +78,7 @@ public class RequestHandler implements Runnable{
                 return;
             }
 
+            // 요구사항 1.3 - POST 방식으로 회원가입하기
             if (method.equals("POST") && url.startsWith("/user/signup")) {
                 Map<String, String> queryParameter = HttpRequestUtils.parseQueryParameter(IOUtils.readData(br, requestContentLength));
                 User newUser = new User(queryParameter.get("userId"), queryParameter.get("password"), queryParameter.get("name"), queryParameter.get("email"));
@@ -77,6 +88,7 @@ public class RequestHandler implements Runnable{
                 return;
             }
 
+            // 요구사항 1.5 - 로그인하기
             if (url.equals("/user/login.html")) {
                 body = Files.readAllBytes(Paths.get("./webapp" + url));
             }
@@ -96,6 +108,21 @@ public class RequestHandler implements Runnable{
                 return;
             }
 
+            // 요구사항 1.6 - 사용자 목록 출력
+            if (url.equals("/user/list.html")) {
+                body = Files.readAllBytes(Paths.get("./webapp" + url));
+            }
+
+            if (url.startsWith("/user/userList")) {
+                System.out.println("logined = " + logined);
+                if (logined) {
+                    response302Header(dos, "/user/list.html");
+                } else {
+                    response302Header(dos, "/user/login.html");
+                }
+                return;
+            }
+
             response200Header(dos, body.length);
             responseBody(dos, body);
         } catch (IOException e) {
@@ -107,7 +134,7 @@ public class RequestHandler implements Runnable{
         try {
             dos.writeBytes("HTTP/1.1 302 Redirect \r\n");
             dos.writeBytes("Location: " + path + "\r\n");
-            dos.writeBytes("Cookie: logined=" + logined +  "\r\n");
+            dos.writeBytes("Set-Cookie: logined=" + logined +  "\r\n");
             dos.writeBytes("\r\n");
         } catch (IOException e) {
             log.log(Level.SEVERE, e.getMessage());
