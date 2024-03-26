@@ -1,11 +1,16 @@
 package webserver;
 
+import db.MemoryUserRepository;
+import http.util.HttpRequestUtils;
 import http.util.IOUtils;
+import model.User;
 
 import java.io.*;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Collection;
+import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -30,14 +35,40 @@ public class RequestHandler implements Runnable{
             String method = startLines[0];
             String url = startLines[1];
 
-            if (Objects.equals(url, "/")) url = "/index.html";
+            byte[] body = new byte[0];
 
-            byte[] body = Files.readAllBytes(Paths.get("./webapp" + url));
+            if (url.equals("/") || url.equals("/index.html")) {
+                body = Files.readAllBytes(Paths.get("./webapp" + "/index.html"));
+            }
+
+            if (url.equals("/user/form.html")) {
+                body = Files.readAllBytes(Paths.get("./webapp" + url));
+            }
+
+            if (method.equals("GET") && url.startsWith("/user/signup")) {
+                Map<String, String> queryParameter = HttpRequestUtils.parseQueryParameter(url.split("\\?")[1]);
+                User newUser = new User(queryParameter.get("userId"), queryParameter.get("password"), queryParameter.get("name"), queryParameter.get("email"));
+                MemoryUserRepository memoryUserRepository = MemoryUserRepository.getInstance();
+                memoryUserRepository.addUser(newUser);
+
+                body = Files.readAllBytes(Paths.get("./webapp" + "/index.html"));
+                response302Header(dos, "/");
+            }
+
             response200Header(dos, body.length);
             responseBody(dos, body);
-
         } catch (IOException e) {
             log.log(Level.SEVERE,e.getMessage());
+        }
+    }
+
+    private void response302Header(DataOutputStream dos, String path) {
+        try {
+            dos.writeBytes("HTTP/1.1 302 Redirect \r\n");
+            dos.writeBytes("Location: " + path + "\r\n");
+            dos.writeBytes("\r\n");
+        } catch (IOException e) {
+            log.log(Level.SEVERE, e.getMessage());
         }
     }
 
