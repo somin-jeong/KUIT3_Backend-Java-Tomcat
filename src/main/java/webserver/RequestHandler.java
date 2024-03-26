@@ -35,6 +35,19 @@ public class RequestHandler implements Runnable{
             String method = startLines[0];
             String url = startLines[1];
 
+            int requestContentLength = 0;
+
+            while (true) {
+                final String line = br.readLine();
+                if (line.equals("")) {
+                    break;
+                }
+                // header info
+                if (line.startsWith("Content-Length")) {
+                    requestContentLength = Integer.parseInt(line.split(": ")[1]);
+                }
+            }
+
             byte[] body = new byte[0];
 
             if (url.equals("/") || url.equals("/index.html")) {
@@ -51,8 +64,18 @@ public class RequestHandler implements Runnable{
                 MemoryUserRepository memoryUserRepository = MemoryUserRepository.getInstance();
                 memoryUserRepository.addUser(newUser);
 
-                body = Files.readAllBytes(Paths.get("./webapp" + "/index.html"));
                 response302Header(dos, "/");
+                return;
+            }
+
+            if (method.equals("POST") && url.startsWith("/user/signup")) {
+                Map<String, String> queryParameter = HttpRequestUtils.parseQueryParameter(IOUtils.readData(br, requestContentLength));
+                User newUser = new User(queryParameter.get("userId"), queryParameter.get("password"), queryParameter.get("name"), queryParameter.get("email"));
+                MemoryUserRepository memoryUserRepository = MemoryUserRepository.getInstance();
+                memoryUserRepository.addUser(newUser);
+
+                response302Header(dos, "/");
+                return;
             }
 
             response200Header(dos, body.length);
