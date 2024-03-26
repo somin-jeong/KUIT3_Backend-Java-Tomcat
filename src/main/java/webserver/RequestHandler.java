@@ -1,6 +1,7 @@
 package webserver;
 
 import db.MemoryUserRepository;
+import db.Repository;
 import http.util.HttpRequestUtils;
 import http.util.IOUtils;
 import model.User;
@@ -9,23 +10,23 @@ import java.io.*;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Collection;
 import java.util.Map;
-import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class RequestHandler implements Runnable{
     Socket connection;
-    private final MemoryUserRepository memoryUserRepository = MemoryUserRepository.getInstance();
     private static final Logger log = Logger.getLogger(RequestHandler.class.getName());
+    private static final String ROOT_URL = "./webapp";
+    private static final String HOME_URL = "/";
+    private static final String HTML_TYPE = "text/html";
+    private static final String CSS_TYPE = "text/css";
+    private final Repository repository;
 
     public RequestHandler(Socket connection) {
         this.connection = connection;
+        this.repository = MemoryUserRepository.getInstance();
     }
-
-    String htmlType = "text/html";
-    String cssType = "text/css";
 
     @Override
     public void run() {
@@ -34,8 +35,10 @@ public class RequestHandler implements Runnable{
             BufferedReader br = new BufferedReader(new InputStreamReader(in));
             DataOutputStream dos = new DataOutputStream(out);
 
+            byte[] body = new byte[0];
+
+            // Header 분석
             String startLine = br.readLine();
-            System.out.println("startLine = " + startLine);
             String[] startLines = startLine.split(" ");
             String method = startLines[0];
             String url = startLines[1];
@@ -54,31 +57,27 @@ public class RequestHandler implements Runnable{
                     requestContentLength = Integer.parseInt(line.split(": ")[1]);
                 }
 
-                if (line.startsWith("Cookie")) {
-                    if (line.split(": ")[1].equals("logined=true")) {
-                        logined = true;
-                    }
+                if (line.startsWith("Cookie") && line.split(": ")[1].equals("logined=true")) {
+                    logined = true;
                 }
             }
 
-            byte[] body = new byte[0];
-
             // 요구사항 1.1 - index.html 반환하기
-            if (url.equals("/") || url.equals("/index.html") && method.equals("GET")) {
-                body = Files.readAllBytes(Paths.get("./webapp" + "/index.html"));
+            if (method.equals("GET") && url.endsWith(".html")) {
+                body = Files.readAllBytes(Paths.get(ROOT_URL + url));
+            }
+
+            if (method.equals("GET") && url.equals(HOME_URL)) {
+                body = Files.readAllBytes(Paths.get(ROOT_URL + "/index.html"));
             }
 
             // 요구사항 1.2 - GET 방식으로 회원가입하기
-            if (method.equals("GET") && url.equals("/user/form.html")) {
-                body = Files.readAllBytes(Paths.get("./webapp" + url));
-            }
-
             if (method.equals("GET") && url.startsWith("/user/signup")) {
                 Map<String, String> queryParameter = HttpRequestUtils.parseQueryParameter(url.split("\\?")[1]);
                 User newUser = new User(queryParameter.get("userId"), queryParameter.get("password"), queryParameter.get("name"), queryParameter.get("email"));
-                memoryUserRepository.addUser(newUser);
+                repository.addUser(newUser);
 
-                response302Header(dos, "/");
+                response302Header(dos, HOME_URL);
                 return;
             }
 
@@ -86,55 +85,42 @@ public class RequestHandler implements Runnable{
             if (method.equals("POST") && url.startsWith("/user/signup")) {
                 Map<String, String> queryParameter = HttpRequestUtils.parseQueryParameter(IOUtils.readData(br, requestContentLength));
                 User newUser = new User(queryParameter.get("userId"), queryParameter.get("password"), queryParameter.get("name"), queryParameter.get("email"));
-                memoryUserRepository.addUser(newUser);
+                repository.addUser(newUser);
 
-                response302Header(dos, "/");
+                response302Header(dos, HOME_URL);
                 return;
             }
 
             // 요구사항 1.5 - 로그인하기
-            if (method.equals("GET") && url.equals("/user/login.html")) {
-                body = Files.readAllBytes(Paths.get("./webapp" + url));
-            }
-
-            if (method.equals("GET") && url.equals("/user/login_failed.html")) {
-                body = Files.readAllBytes(Paths.get("./webapp" + url));
-            }
-
             if (method.equals("POST") && url.startsWith("/user/login")) {
                 Map<String, String> queryParameter = HttpRequestUtils.parseQueryParameter(IOUtils.readData(br, requestContentLength));
-                User findUser = memoryUserRepository.findUserById(queryParameter.get("userId"));
+                User findUser = repository.findUserById(queryParameter.get("userId"));
                 if (findUser != null && findUser.getPassword().equals(queryParameter.get("password"))) {
-                    response302HeaderWithCookie(dos, "/", true);
+                    response302HeaderWithCookie(dos, HOME_URL, true);
                 } else {
-                    response302HeaderWithCookie(dos, "/user/login_failed.html", false);
+                    response302Header(dos, "/user/login_failed.html");
                 }
                 return;
             }
 
             // 요구사항 1.6 - 사용자 목록 출력
-            if (method.equals("GET") && url.equals("/user/list.html")) {
-                body = Files.readAllBytes(Paths.get("./webapp" + url));
-            }
-
             if (method.equals("GET") && url.startsWith("/user/userList")) {
-                System.out.println("logined = " + logined);
-                if (logined) {
-                    response302Header(dos, "/user/list.html");
-                } else {
+                if (!logined) {
                     response302Header(dos, "/user/login.html");
+                    return;
                 }
-                return;
+                body = Files.readAllBytes(Paths.get(ROOT_URL + "/user/list.html"));
             }
 
+            // 요구사항 1.7 - CSS 출력
             if (method.equals("GET") && url.endsWith(".css")) {
-                body = Files.readAllBytes(Paths.get("./webapp" + url));
-                response200Header(dos, body.length, cssType);
+                body = Files.readAllBytes(Paths.get(ROOT_URL + url));
+                response200Header(dos, body.length, CSS_TYPE);
                 responseBody(dos, body);
                 return;
             }
 
-            response200Header(dos, body.length, htmlType);
+            response200Header(dos, body.length, HTML_TYPE);
             responseBody(dos, body);
         } catch (IOException e) {
             log.log(Level.SEVERE,e.getMessage());
