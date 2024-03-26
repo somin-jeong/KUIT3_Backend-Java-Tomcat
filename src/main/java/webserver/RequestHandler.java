@@ -17,6 +17,7 @@ import java.util.logging.Logger;
 
 public class RequestHandler implements Runnable{
     Socket connection;
+    private final MemoryUserRepository memoryUserRepository = MemoryUserRepository.getInstance();
     private static final Logger log = Logger.getLogger(RequestHandler.class.getName());
 
     public RequestHandler(Socket connection) {
@@ -61,7 +62,6 @@ public class RequestHandler implements Runnable{
             if (method.equals("GET") && url.startsWith("/user/signup")) {
                 Map<String, String> queryParameter = HttpRequestUtils.parseQueryParameter(url.split("\\?")[1]);
                 User newUser = new User(queryParameter.get("userId"), queryParameter.get("password"), queryParameter.get("name"), queryParameter.get("email"));
-                MemoryUserRepository memoryUserRepository = MemoryUserRepository.getInstance();
                 memoryUserRepository.addUser(newUser);
 
                 response302Header(dos, "/");
@@ -71,10 +71,28 @@ public class RequestHandler implements Runnable{
             if (method.equals("POST") && url.startsWith("/user/signup")) {
                 Map<String, String> queryParameter = HttpRequestUtils.parseQueryParameter(IOUtils.readData(br, requestContentLength));
                 User newUser = new User(queryParameter.get("userId"), queryParameter.get("password"), queryParameter.get("name"), queryParameter.get("email"));
-                MemoryUserRepository memoryUserRepository = MemoryUserRepository.getInstance();
                 memoryUserRepository.addUser(newUser);
 
                 response302Header(dos, "/");
+                return;
+            }
+
+            if (url.equals("/user/login.html")) {
+                body = Files.readAllBytes(Paths.get("./webapp" + url));
+            }
+
+            if (url.equals("/user/login_failed.html")) {
+                body = Files.readAllBytes(Paths.get("./webapp" + url));
+            }
+
+            if (method.equals("POST") && url.startsWith("/user/login")) {
+                Map<String, String> queryParameter = HttpRequestUtils.parseQueryParameter(IOUtils.readData(br, requestContentLength));
+                User findUser = memoryUserRepository.findUserById(queryParameter.get("userId"));
+                if (findUser != null && findUser.getPassword().equals(queryParameter.get("password"))) {
+                    response302HeaderWithCookie(dos, "/", true);
+                } else {
+                    response302HeaderWithCookie(dos, "/user/login_failed.html", false);
+                }
                 return;
             }
 
@@ -82,6 +100,17 @@ public class RequestHandler implements Runnable{
             responseBody(dos, body);
         } catch (IOException e) {
             log.log(Level.SEVERE,e.getMessage());
+        }
+    }
+
+    private void response302HeaderWithCookie(DataOutputStream dos, String path, Boolean logined) {
+        try {
+            dos.writeBytes("HTTP/1.1 302 Redirect \r\n");
+            dos.writeBytes("Location: " + path + "\r\n");
+            dos.writeBytes("Cookie: logined=" + logined +  "\r\n");
+            dos.writeBytes("\r\n");
+        } catch (IOException e) {
+            log.log(Level.SEVERE, e.getMessage());
         }
     }
 
