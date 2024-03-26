@@ -24,6 +24,9 @@ public class RequestHandler implements Runnable{
         this.connection = connection;
     }
 
+    String htmlType = "text/html";
+    String cssType = "text/css";
+
     @Override
     public void run() {
         log.log(Level.INFO, "New Client Connect! Connected IP : " + connection.getInetAddress() + ", Port : " + connection.getPort());
@@ -32,6 +35,7 @@ public class RequestHandler implements Runnable{
             DataOutputStream dos = new DataOutputStream(out);
 
             String startLine = br.readLine();
+            System.out.println("startLine = " + startLine);
             String[] startLines = startLine.split(" ");
             String method = startLines[0];
             String url = startLines[1];
@@ -60,12 +64,12 @@ public class RequestHandler implements Runnable{
             byte[] body = new byte[0];
 
             // 요구사항 1.1 - index.html 반환하기
-            if (url.equals("/") || url.equals("/index.html")) {
+            if (url.equals("/") || url.equals("/index.html") && method.equals("GET")) {
                 body = Files.readAllBytes(Paths.get("./webapp" + "/index.html"));
             }
 
             // 요구사항 1.2 - GET 방식으로 회원가입하기
-            if (url.equals("/user/form.html")) {
+            if (method.equals("GET") && url.equals("/user/form.html")) {
                 body = Files.readAllBytes(Paths.get("./webapp" + url));
             }
 
@@ -89,11 +93,11 @@ public class RequestHandler implements Runnable{
             }
 
             // 요구사항 1.5 - 로그인하기
-            if (url.equals("/user/login.html")) {
+            if (method.equals("GET") && url.equals("/user/login.html")) {
                 body = Files.readAllBytes(Paths.get("./webapp" + url));
             }
 
-            if (url.equals("/user/login_failed.html")) {
+            if (method.equals("GET") && url.equals("/user/login_failed.html")) {
                 body = Files.readAllBytes(Paths.get("./webapp" + url));
             }
 
@@ -109,11 +113,11 @@ public class RequestHandler implements Runnable{
             }
 
             // 요구사항 1.6 - 사용자 목록 출력
-            if (url.equals("/user/list.html")) {
+            if (method.equals("GET") && url.equals("/user/list.html")) {
                 body = Files.readAllBytes(Paths.get("./webapp" + url));
             }
 
-            if (url.startsWith("/user/userList")) {
+            if (method.equals("GET") && url.startsWith("/user/userList")) {
                 System.out.println("logined = " + logined);
                 if (logined) {
                     response302Header(dos, "/user/list.html");
@@ -123,7 +127,14 @@ public class RequestHandler implements Runnable{
                 return;
             }
 
-            response200Header(dos, body.length);
+            if (method.equals("GET") && url.endsWith(".css")) {
+                body = Files.readAllBytes(Paths.get("./webapp" + url));
+                response200Header(dos, body.length, cssType);
+                responseBody(dos, body);
+                return;
+            }
+
+            response200Header(dos, body.length, htmlType);
             responseBody(dos, body);
         } catch (IOException e) {
             log.log(Level.SEVERE,e.getMessage());
@@ -151,10 +162,10 @@ public class RequestHandler implements Runnable{
         }
     }
 
-    private void response200Header(DataOutputStream dos, int lengthOfBodyContent) {
+    private void response200Header(DataOutputStream dos, int lengthOfBodyContent, String type) {
         try {
             dos.writeBytes("HTTP/1.1 200 OK \r\n");
-            dos.writeBytes("Content-Type: text/html;charset=utf-8\r\n");
+            dos.writeBytes("Content-Type: " + type + ";charset=utf-8\r\n");
             dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
             dos.writeBytes("\r\n");
         } catch (IOException e) {
