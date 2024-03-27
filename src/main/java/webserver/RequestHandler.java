@@ -5,6 +5,7 @@ import db.Repository;
 import http.enumclass.HttpHeader;
 import http.enumclass.HttpMethod;
 import http.enumclass.HttpUrl;
+import http.util.HttpRequest;
 import http.util.HttpRequestUtils;
 import http.util.IOUtils;
 import model.User;
@@ -48,32 +49,13 @@ public class RequestHandler implements Runnable{
             BufferedReader br = new BufferedReader(new InputStreamReader(in));
             DataOutputStream dos = new DataOutputStream(out);
 
-            byte[] body = new byte[0];
+            HttpRequest httpRequest = HttpRequest.from(br);
 
-            // Header 분석
-            String startLine = br.readLine();
-            String[] startLines = startLine.split(STARTLINE_SPLIT_REGEX);
+            String[] startLines = httpRequest.getHttpStartline().split(STARTLINE_SPLIT_REGEX);
             String method = startLines[0];
             String url = startLines[1];
 
-            int requestContentLength = 0;
-            boolean logined = false;
-
-            while (true) {
-                final String line = br.readLine();
-                if (line.equals("")) {
-                    break;
-                }
-
-                // header info
-                if (line.startsWith(CONTENT_LENGTH.getHeader())) {
-                    requestContentLength = Integer.parseInt(line.split(HEADER_SPLIT_REGEX)[1]);
-                }
-
-                if (line.startsWith(COOKIE.getHeader()) && line.split(HEADER_SPLIT_REGEX)[1].equals("logined=true")) {
-                    logined = true;
-                }
-            }
+            byte[] body = new byte[0];
 
             // 요구사항 1.1 - index.html 반환하기
             if (method.equals(GET.getMethod()) && url.endsWith(HTML.getUrl())) {
@@ -96,7 +78,7 @@ public class RequestHandler implements Runnable{
 
             // 요구사항 1.3 - POST 방식으로 회원가입하기
             if (method.equals(POST.getMethod()) && url.startsWith(SIGNUP.getUrl())) {
-                Map<String, String> queryParameter = HttpRequestUtils.parseQueryParameter(IOUtils.readData(br, requestContentLength));
+                Map<String, String> queryParameter = HttpRequestUtils.parseQueryParameter(httpRequest.getHttpBody());
                 User newUser = new User(queryParameter.get(USERID.getKey()), queryParameter.get(PASSWORD.getKey()), queryParameter.get(NAME.getKey()), queryParameter.get(EMAIL.getKey()));
                 repository.addUser(newUser);
 
@@ -106,7 +88,7 @@ public class RequestHandler implements Runnable{
 
             // 요구사항 1.5 - 로그인하기
             if (method.equals(POST.getMethod()) && url.startsWith(LOGIN.getUrl())) {
-                Map<String, String> queryParameter = HttpRequestUtils.parseQueryParameter(IOUtils.readData(br, requestContentLength));
+                Map<String, String> queryParameter = HttpRequestUtils.parseQueryParameter(httpRequest.getHttpBody());
                 User findUser = repository.findUserById(queryParameter.get(USERID.getKey()));
                 if (findUser != null && findUser.getPassword().equals(queryParameter.get(PASSWORD.getKey()))) {
                     response302HeaderWithCookie(dos, HOME.getUrl(), true);
@@ -118,7 +100,7 @@ public class RequestHandler implements Runnable{
 
             // 요구사항 1.6 - 사용자 목록 출력
             if (method.equals(GET.getMethod()) && url.startsWith(USERLIST.getUrl())) {
-                if (!logined) {
+                if (!httpRequest.getHttpCookie().equals("logined=true")) {
                     response302Header(dos, "/user/login.html");
                     return;
                 }
