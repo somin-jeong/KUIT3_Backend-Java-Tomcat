@@ -14,8 +14,6 @@ import static http.enumclass.UserQueryKey.PASSWORD;
 import static http.enumclass.UserQueryKey.USERID;
 
 public class LoginController implements Controller {
-    private final Repository repository = MemoryUserRepository.getInstance();
-
     @Override
     public void execute(HttpRequest httpRequest, HttpResponse httpResponse) {
         Map<String, String> queryParameter = HttpRequestUtils.parseQueryParameter(httpRequest.getHttpBody());
@@ -23,7 +21,7 @@ public class LoginController implements Controller {
         if (findUser != null && findUser.getPassword().equals(queryParameter.get(PASSWORD.getKey()))) {
             httpResponse.redirect(HOME.getUrl(), true);
         } else {
-            httpResponse.redirect("/user/login_failed.html", false);
+            httpResponse.redirect(LOGIN_FAILED_URL, false);
         }
     }
 }

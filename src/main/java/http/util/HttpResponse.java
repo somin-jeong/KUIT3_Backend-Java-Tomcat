@@ -1,6 +1,5 @@
 package http.util;
 
-import http.enumclass.HttpUrl;
 import webserver.RequestHandler;
 
 import java.io.DataOutputStream;
@@ -16,7 +15,7 @@ import static http.enumclass.HttpContentType.HTML_TYPE;
 import static http.enumclass.HttpHeader.*;
 import static http.enumclass.HttpStatusCode.response200;
 import static http.enumclass.HttpStatusCode.response302;
-import static http.enumclass.HttpUrl.*;
+import static http.enumclass.HttpUrl.HTML;
 
 public class HttpResponse {
     private static final Logger log = Logger.getLogger(RequestHandler.class.getName());
