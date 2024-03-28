@@ -1,4 +1,4 @@
-package http.util;
+package http.util.utils;
 
 import java.io.BufferedReader;
 import java.io.IOException;

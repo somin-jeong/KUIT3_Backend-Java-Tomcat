@@ -1,11 +1,8 @@
 package controller;
 
-import db.MemoryUserRepository;
-import db.Repository;
-import http.enumclass.HttpMethod;
-import http.util.HttpRequest;
-import http.util.HttpRequestUtils;
-import http.util.HttpResponse;
+import http.util.request.HttpRequest;
+import http.util.utils.HttpRequestUtils;
+import http.util.response.HttpResponse;
 import model.User;
 
 import java.util.Map;

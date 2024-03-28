@@ -1,7 +1,7 @@
 package controller;
 
-import http.util.HttpRequest;
-import http.util.HttpResponse;
+import http.util.request.HttpRequest;
+import http.util.response.HttpResponse;
 
 public class HomeController implements Controller {
     @Override

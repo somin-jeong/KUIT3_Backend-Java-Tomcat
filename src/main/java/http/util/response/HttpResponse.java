@@ -1,4 +1,4 @@
-package http.util;
+package http.util.response;
 
 import webserver.RequestHandler;
 
