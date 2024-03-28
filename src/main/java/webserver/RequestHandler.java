@@ -1,7 +1,7 @@
 package webserver;
 
-import http.util.request.HttpRequest;
-import http.util.response.HttpResponse;
+import http.request.HttpRequest;
+import http.response.HttpResponse;
 
 import java.io.*;
 import java.net.Socket;

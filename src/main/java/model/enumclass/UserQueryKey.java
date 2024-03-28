@@ -1,4 +1,4 @@
-package http.enumclass;
+package model.enumclass;
 
 public enum UserQueryKey {
     USERID("userId"), PASSWORD("password"), NAME("name"), EMAIL("email");

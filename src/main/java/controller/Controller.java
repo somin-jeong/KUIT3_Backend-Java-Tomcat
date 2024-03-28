@@ -2,8 +2,8 @@ package controller;
 
 import db.MemoryUserRepository;
 import db.Repository;
-import http.util.request.HttpRequest;
-import http.util.response.HttpResponse;
+import http.request.HttpRequest;
+import http.response.HttpResponse;
 
 public interface Controller {
     Repository repository = MemoryUserRepository.getInstance();

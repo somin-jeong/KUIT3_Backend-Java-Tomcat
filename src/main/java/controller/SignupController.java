@@ -1,16 +1,16 @@
 package controller;
 
-import http.util.request.HttpRequest;
-import http.util.utils.HttpRequestUtils;
-import http.util.response.HttpResponse;
+import http.request.HttpRequest;
+import http.utils.HttpRequestUtils;
+import http.response.HttpResponse;
 import model.User;
 
 import java.util.Map;
 
 import static http.enumclass.HttpMethod.*;
 import static http.enumclass.HttpUrl.HOME;
-import static http.enumclass.UserQueryKey.*;
-import static http.enumclass.UserQueryKey.EMAIL;
+import static model.enumclass.UserQueryKey.*;
+import static model.enumclass.UserQueryKey.EMAIL;
 
 public class SignupController implements Controller {
     @Override

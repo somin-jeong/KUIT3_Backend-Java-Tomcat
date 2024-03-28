@@ -1,7 +1,7 @@
 package controller;
 
-import http.util.request.HttpRequest;
-import http.util.response.HttpResponse;
+import http.request.HttpRequest;
+import http.response.HttpResponse;
 
 public class ListController implements Controller {
     @Override

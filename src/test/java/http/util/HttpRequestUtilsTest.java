@@ -1,6 +1,6 @@
 package http.util;
 
-import http.util.utils.HttpRequestUtils;
+import http.utils.HttpRequestUtils;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;

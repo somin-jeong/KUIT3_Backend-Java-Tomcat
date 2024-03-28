@@ -1,15 +1,15 @@
 package controller;
 
-import http.util.request.HttpRequest;
-import http.util.utils.HttpRequestUtils;
-import http.util.response.HttpResponse;
+import http.request.HttpRequest;
+import http.utils.HttpRequestUtils;
+import http.response.HttpResponse;
 import model.User;
 
 import java.util.Map;
 
 import static http.enumclass.HttpUrl.HOME;
-import static http.enumclass.UserQueryKey.PASSWORD;
-import static http.enumclass.UserQueryKey.USERID;
+import static model.enumclass.UserQueryKey.PASSWORD;
+import static model.enumclass.UserQueryKey.USERID;
 
 public class LoginController implements Controller {
     @Override

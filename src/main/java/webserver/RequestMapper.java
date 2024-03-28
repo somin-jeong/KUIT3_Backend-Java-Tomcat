@@ -1,8 +1,8 @@
 package webserver;
 
 import controller.*;
-import http.util.request.HttpRequest;
-import http.util.response.HttpResponse;
+import http.request.HttpRequest;
+import http.response.HttpResponse;
 
 import java.util.HashMap;
 import java.util.Map;
