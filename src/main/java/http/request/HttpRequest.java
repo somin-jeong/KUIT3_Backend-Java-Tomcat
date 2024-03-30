@@ -1,83 +1,70 @@
 package http.request;
 
-import http.utils.IOUtils;
+import http.enumclass.HttpHeader;
+import http.enumclass.HttpMethod;
+import http.utils.HttpRequestUtils;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.Map;
 
 import static http.enumclass.HttpHeader.CONTENT_LENGTH;
-import static http.enumclass.HttpHeader.COOKIE;
+import static http.utils.IOUtils.readData;
 
 public class HttpRequest {
-    private static final String HEADER_SPLIT_REGEX = ": ";
-    private static final String STARTLINE_SPLIT_REGEX = " ";
-    private final String httpStartline;
-    private final String httpHeaders;
+    private final HttpStartline httpStartline;
+    private final HttpHeaders httpHeaders;
     private final String httpBody;
-    private final String httpCookie;
 
-    private HttpRequest(String httpStartline, String httpHeaders, String httpBody, String httpCookie) {
+    private HttpRequest(HttpStartline httpStartline, HttpHeaders httpHeaders, String httpBody) {
         this.httpStartline = httpStartline;
         this.httpHeaders = httpHeaders;
         this.httpBody = httpBody;
-        this.httpCookie = httpCookie;
     }
 
     public static HttpRequest from(BufferedReader br) throws IOException {
-        // Header 분석
-        String startLine = br.readLine();
-
-        StringBuilder header = new StringBuilder();
-        int requestContentLength = 0;
-        String cookie = "";
-
-        while (true) {
-            final String line = br.readLine();
-
-            if (line.equals("")) {
-                break;
-            }
-
-            // header info
-            if (line.startsWith(CONTENT_LENGTH.getHeader())) {
-                requestContentLength = Integer.parseInt(line.split(HEADER_SPLIT_REGEX)[1]);
-            }
-
-            if (line.startsWith(COOKIE.getHeader())) {
-                cookie = line.split(HEADER_SPLIT_REGEX)[1];
-            }
-
-            header.append(line + " \r\n");
+        final String requestStartLine = br.readLine();
+        if (requestStartLine == null) {
+            throw new IllegalArgumentException("request가 비어있습니다.");
         }
 
-        String body = IOUtils.readData(br, requestContentLength);
+        // Header 분석
+        final HttpStartline startLine = HttpStartline.from((requestStartLine));
+        final HttpHeaders headers = HttpHeaders.from(br);
+        final String body = readBody(br, headers);
 
-        return new HttpRequest(startLine, header.toString(), body, cookie);
+        return new HttpRequest(startLine, headers, body);
     }
 
-    public String getMethod() {
-        String[] startLines = httpStartline.split(STARTLINE_SPLIT_REGEX);
-        return startLines[0];
+    private static String readBody(final BufferedReader bufferedReader, final HttpHeaders headers) throws IOException {
+        if (!headers.contains(CONTENT_LENGTH)) {
+            return "";
+        }
+
+        final int contentLength = Integer.parseInt(headers.get(CONTENT_LENGTH));
+
+        return readData(bufferedReader, contentLength);
+    }
+    public Map<String, String> getQueryParam() {
+        return httpStartline.getQueryParameters();
+    }
+
+    public Map<String, String> getQueryParamsFromBody() {
+        return HttpRequestUtils.parseQueryParameter(httpBody);
     }
 
     public String getUrl() {
-        String[] startLines = httpStartline.split(STARTLINE_SPLIT_REGEX);
-        return startLines[1];
+        return httpStartline.getUrl();
     }
 
-    public String getHttpStartline() {
-        return httpStartline;
+    public HttpMethod getMethod() {
+        return httpStartline.getMethod();
     }
 
-    public String getHttpHeaders() {
-        return httpHeaders;
-    }
-
-    public String getHttpBody() {
-        return httpBody;
-    }
-
-    public String getHttpCookie() {
-        return httpCookie;
+    public String getHttpHeader(HttpHeader httpHeader) {
+        if (httpHeaders.contains(httpHeader)) {
+            return httpHeaders.get(httpHeader);
+        }
+        return null;
     }
 }
