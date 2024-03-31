@@ -5,6 +5,7 @@ import http.utils.HttpRequestUtils;
 import http.response.HttpResponse;
 import model.User;
 
+import java.io.IOException;
 import java.util.Map;
 
 import static http.enumclass.HttpMethod.*;
@@ -14,7 +15,7 @@ import static model.enumclass.UserQueryKey.EMAIL;
 
 public class SignupController implements Controller {
     @Override
-    public void execute(HttpRequest httpRequest, HttpResponse httpResponse) {
+    public void execute(HttpRequest httpRequest, HttpResponse httpResponse) throws IOException {
         Map<String, String> queryParameter = httpRequest.getQueryParamsFromBody();
 
         if (GET.getMethod().equals(httpRequest.getMethod())){

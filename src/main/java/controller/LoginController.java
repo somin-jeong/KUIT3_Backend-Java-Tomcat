@@ -5,6 +5,7 @@ import http.utils.HttpRequestUtils;
 import http.response.HttpResponse;
 import model.User;
 
+import java.io.IOException;
 import java.util.Map;
 
 import static http.enumclass.HttpUrl.HOME;
@@ -13,7 +14,7 @@ import static model.enumclass.UserQueryKey.USERID;
 
 public class LoginController implements Controller {
     @Override
-    public void execute(HttpRequest httpRequest, HttpResponse httpResponse) {
+    public void execute(HttpRequest httpRequest, HttpResponse httpResponse) throws IOException {
         Map<String, String> queryParameter = httpRequest.getQueryParamsFromBody();
         User findUser = repository.findUserById(queryParameter.get(USERID.getKey()));
         if (findUser != null && findUser.getPassword().equals(queryParameter.get(PASSWORD.getKey()))) {
