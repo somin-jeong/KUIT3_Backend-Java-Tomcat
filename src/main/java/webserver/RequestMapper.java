@@ -4,6 +4,7 @@ import controller.*;
 import http.request.HttpRequest;
 import http.response.HttpResponse;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,8 +34,7 @@ public class RequestMapper {
         controllers.put(USERLIST.getUrl(), new ListController());
     }
 
-    public void proceed() {
-        System.out.println("controller = " + controller);
+    public void proceed() throws IOException {
         controller.execute(httpRequest, httpResponse);
     }
 }

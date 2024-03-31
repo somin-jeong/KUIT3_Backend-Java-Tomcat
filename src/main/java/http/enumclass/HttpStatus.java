@@ -1,11 +1,11 @@
 package http.enumclass;
 
-public enum HttpStatusCode {
-    response302("302"), response200("200");
+public enum HttpStatus {
+    OK("OK"), REDIRECT("FOUND"), STATUS_CODE302("302"), STATUS_CODE200("200");
 
     private final String code;
 
-    HttpStatusCode(String code){
+    HttpStatus(String code){
         this.code = code;
     }
 

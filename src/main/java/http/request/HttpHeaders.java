@@ -9,7 +9,7 @@ import java.util.*;
 public class HttpHeaders {
     private static final String DISCRIMINATOR = ": ";
     private final Map<HttpHeader, String> httpHeaders;
-    private HttpHeaders(Map<HttpHeader, String> httpHeaders) {
+    public HttpHeaders(Map<HttpHeader, String> httpHeaders) {
         this.httpHeaders = httpHeaders;
     }
 
