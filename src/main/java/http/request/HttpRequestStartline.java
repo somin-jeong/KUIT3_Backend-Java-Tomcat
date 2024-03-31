@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class HttpStartline {
+public class HttpRequestStartline {
     private static final String STARTLINE_SPLIT_REGEX = " ";
     private static final String PARAM_SPLIT_REGEX = "\\?";
     private static final int START_LINE_MIN_LENGTH = 3;
@@ -16,18 +16,18 @@ public class HttpStartline {
     private final String url;
     private final Map<String, String> query;
     private final String version;
-    private HttpStartline(HttpMethod method, String url, Map<String, String> query, String version) {
+    private HttpRequestStartline(HttpMethod method, String url, Map<String, String> query, String version) {
         this.method = method;
         this.url = url;
         this.query = query;
         this.version = version;
     }
 
-    public static HttpStartline from(String startLine) {
+    public static HttpRequestStartline from(String startLine) {
         return parse(startLine);
     }
 
-    private static HttpStartline parse(String startLine) {
+    private static HttpRequestStartline parse(String startLine) {
         List<String> startLines = Arrays.asList(startLine.split(STARTLINE_SPLIT_REGEX));
         validateStartLineLength(startLines);
 
@@ -42,7 +42,7 @@ public class HttpStartline {
         
         String httpVersion = startLines.get(2);
 
-        return new HttpStartline(httpMethod, httpUrl, httpQuery, httpVersion);
+        return new HttpRequestStartline(httpMethod, httpUrl, httpQuery, httpVersion);
     }
 
     private static void validateStartLineLength(List<String> startLines) {

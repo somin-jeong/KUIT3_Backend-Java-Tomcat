@@ -12,12 +12,12 @@ import static http.enumclass.HttpHeader.CONTENT_LENGTH;
 import static http.utils.IOUtils.readData;
 
 public class HttpRequest {
-    private final HttpStartline httpStartline;
+    private final HttpRequestStartline httpRequestStartline;
     private final HttpHeaders httpHeaders;
     private final String httpBody;
 
-    private HttpRequest(HttpStartline httpStartline, HttpHeaders httpHeaders, String httpBody) {
-        this.httpStartline = httpStartline;
+    private HttpRequest(HttpRequestStartline httpRequestStartline, HttpHeaders httpHeaders, String httpBody) {
+        this.httpRequestStartline = httpRequestStartline;
         this.httpHeaders = httpHeaders;
         this.httpBody = httpBody;
     }
@@ -29,7 +29,7 @@ public class HttpRequest {
         }
 
         // Header 분석
-        final HttpStartline startLine = HttpStartline.from((requestStartLine));
+        final HttpRequestStartline startLine = HttpRequestStartline.from((requestStartLine));
         final HttpHeaders headers = HttpHeaders.from(br);
         final String body = readBody(br, headers);
 
@@ -46,7 +46,7 @@ public class HttpRequest {
         return readData(bufferedReader, contentLength);
     }
     public Map<String, String> getQueryParam() {
-        return httpStartline.getQueryParameters();
+        return httpRequestStartline.getQueryParameters();
     }
 
     public Map<String, String> getQueryParamsFromBody() {
@@ -54,11 +54,11 @@ public class HttpRequest {
     }
 
     public String getUrl() {
-        return httpStartline.getUrl();
+        return httpRequestStartline.getUrl();
     }
 
     public HttpMethod getMethod() {
-        return httpStartline.getMethod();
+        return httpRequestStartline.getMethod();
     }
 
     public String getHttpHeader(HttpHeader httpHeader) {
